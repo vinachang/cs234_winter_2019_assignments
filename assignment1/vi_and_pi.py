@@ -169,8 +169,23 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
 	policy = np.zeros(nS, dtype=int)
 	############################
 	# YOUR IMPLEMENTATION HERE #
+	value_function_prev = np.full(nS, np.inf)
+	while np.linalg.norm(value_function - value_function_prev, np.inf) > tol:
+		value_function_prev = value_function.copy()
+		for i in range(nS):
+			val = np.zeros(nA)
+			for j in range(nA):
+				for probability, nextstate, reward, _ in P[i][j]:
+					val[j] += probability * reward + gamma * probability * value_function_prev[nextstate]
 
+			value_function[i] = np.max(val)
 
+	for i in range(nS):
+		val = np.zeros(nA)
+		for j in range(nA):
+			for probability, nextstate, reward, _ in P[i][j]:
+				val[j] += probability * reward + probability * gamma * value_function[nextstate]
+		policy[i] = np.argmax(val)
 	############################
 	return value_function, policy
 
