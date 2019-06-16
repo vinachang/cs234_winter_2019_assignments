@@ -67,8 +67,8 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
 
 	while np.linalg.norm(value_function_prev - value_function, np.inf) > tol:
 		value_function_prev = np.copy(value_function)
-		for i in range(nS):
-			value_function[i] = R_pi[i] + gamma * P_pi[i].dot(value_function_prev)
+		for s in range(nS):
+			value_function[s] = R_pi[s] + gamma * P_pi[s].dot(value_function_prev)
 	############################
 	return value_function
 
@@ -97,18 +97,13 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
 
 	############################
 	# YOUR IMPLEMENTATION HERE #
-	for i in range(nS):
-		max_value = -np.inf
-		best_action = None
-		for j in range(nA):
-			value = 0
-			for probability, nextstate, reward, _ in P[i][j]:
-				value += probability * reward + gamma * probability * value_from_policy[nextstate]
-			if value > max_value:
-				max_value = value
-				best_action = j
+	for s in range(nS):
+		val = np.zeros(nA)
+		for a in range(nA):
+			for probability, nextstate, reward, _ in P[s][a]:
+				val[a] += probability * (reward + gamma * value_from_policy[nextstate])
 
-		new_policy[i] = best_action
+		new_policy[s] = np.argmax(val)
 
 	############################
 	return new_policy
@@ -172,20 +167,20 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
 	value_function_prev = np.full(nS, np.inf)
 	while np.linalg.norm(value_function - value_function_prev, np.inf) > tol:
 		value_function_prev = value_function.copy()
-		for i in range(nS):
+		for s in range(nS):
 			val = np.zeros(nA)
-			for j in range(nA):
-				for probability, nextstate, reward, _ in P[i][j]:
-					val[j] += probability * reward + gamma * probability * value_function_prev[nextstate]
+			for a in range(nA):
+				for probability, nextstate, reward, _ in P[s][a]:
+					val[a] += probability * (reward + gamma * value_function_prev[nextstate])
 
-			value_function[i] = np.max(val)
+			value_function[s] = np.max(val)
 
-	for i in range(nS):
+	for s in range(nS):
 		val = np.zeros(nA)
-		for j in range(nA):
-			for probability, nextstate, reward, _ in P[i][j]:
-				val[j] += probability * reward + probability * gamma * value_function[nextstate]
-		policy[i] = np.argmax(val)
+		for a in range(nA):
+			for probability, nextstate, reward, _ in P[s][a]:
+				val[a] += probability * (reward + gamma * value_function[nextstate])
+		policy[s] = np.argmax(val)
 	############################
 	return value_function, policy
 
