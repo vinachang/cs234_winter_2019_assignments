@@ -55,8 +55,20 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
 
 	############################
 	# YOUR IMPLEMENTATION HERE #
+	value_function_prev = np.full(nS, np.inf)
 
+	R_pi = np.zeros(nS)
+	P_pi = np.zeros((nS, nS))
 
+	for i in range(nS):
+		for probability, nextstate, reward, _ in P[i][policy[i]]:
+			R_pi[i] += probability * reward
+			P_pi[i][nextstate] += probability
+
+	while np.linalg.norm(value_function_prev - value_function, np.inf) > tol:
+		value_function_prev = np.copy(value_function)
+		for i in range(nS):
+			value_function[i] = R_pi[i] + gamma * P_pi[i].dot(value_function_prev)
 	############################
 	return value_function
 
@@ -85,7 +97,18 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
 
 	############################
 	# YOUR IMPLEMENTATION HERE #
+	for i in range(nS):
+		max_value = -np.inf
+		best_action = None
+		for j in range(nA):
+			value = 0
+			for probability, nextstate, reward, _ in P[i][j]:
+				value += probability * reward + gamma * probability * value_from_policy[nextstate]
+			if value > max_value:
+				max_value = value
+				best_action = j
 
+		new_policy[i] = best_action
 
 	############################
 	return new_policy
@@ -114,8 +137,13 @@ def policy_iteration(P, nS, nA, gamma=0.9, tol=10e-3):
 
 	############################
 	# YOUR IMPLEMENTATION HERE #
-
-
+	policy_prev = np.random.randint(0, nA, nS)
+	while True:
+		value_function = policy_evaluation(P, nS, nA, policy_prev, gamma, tol)
+		policy = policy_improvement(P, nS, nA, value_function, policy_prev, gamma)
+		if np.array_equal(policy, policy_prev):
+			break
+		policy_prev = policy
 	############################
 	return value_function, policy
 
