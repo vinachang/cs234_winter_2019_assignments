@@ -487,7 +487,7 @@ class PG(object):
     #########   YOUR CODE HERE - 5-10 lines.   ############
     if self.config.use_baseline:
       baseline = self.sess.run(self.baseline, feed_dict={self.observation_placeholder: observations})
-      adv -= baseline
+      adv = adv - baseline
     if self.config.normalize_advantage:
       adv = scipy.stats.zscore(adv)
     #######################################################
