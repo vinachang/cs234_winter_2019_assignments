@@ -184,11 +184,11 @@ class PG(object):
       self.sampled_action = tf.squeeze(tf.multinomial(action_logits, 1), axis=1)
       self.logprob = -tf.nn.sparse_softmax_cross_entropy_with_logits(labels=self.action_placeholder, logits=action_logits)
     else:
-      action_means = build_mlp(self.observation_placeholder, self.action_dim, scope, self.config.n_layers, self.config.layer_size, self.config.activation)
+      action_means = build_mlp(self.observation_placeholder, self.action_dim, scope, self.config.n_layers, self.config.layer_size, None)
 
       with tf.variable_scope(scope, reuse=tf.AUTO_REUSE):
           log_std = tf.get_variable("std", (self.action_dim), trainable=True)
-      self.sampled_action = action_means + tf.random_normal([self.action_dim], 0, 1) * tf.exp(log_std)
+      self.sampled_action = action_means + tf.random_normal([self.config.batch_size, self.action_dim], 0, 1) * tf.exp(log_std)
       self.logprob = tf.contrib.distributions.MultivariateNormalDiag(loc=action_means, scale_diag=tf.exp(log_std)).log_prob(self.action_placeholder)
     #######################################################
     #########          END YOUR CODE.          ############
@@ -210,7 +210,7 @@ class PG(object):
 
     ######################################################
     #########   YOUR CODE HERE - 1-2 lines.   ############
-    self.loss = -self.advantage_placeholder * self.logprob
+    self.loss = -tf.reduce_mean(self.advantage_placeholder * self.logprob)
     #######################################################
     #########          END YOUR CODE.          ############
 
@@ -250,7 +250,7 @@ class PG(object):
     """
     ######################################################
     #########   YOUR CODE HERE - 4-8 lines.   ############
-    self.baseline = tf.squeeze(build_mlp(self.observation_placeholder, 1, scope, self.config.n_layers, self.config.layer_size, self.config.activation), axis=1)
+    self.baseline = tf.squeeze(build_mlp(self.observation_placeholder, 1, scope, self.config.n_layers, self.config.layer_size), axis=1)
     self.baseline_target_placeholder = tf.placeholder(tf.float32, (None,), 'baseline_target')
     loss = tf.losses.mean_squared_error(self.baseline_target_placeholder, self.baseline, scope=scope)
     self.update_baseline_op = tf.train.AdamOptimizer(learning_rate=self.lr).minimize(loss)
