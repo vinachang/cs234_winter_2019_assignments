@@ -445,14 +445,15 @@ class PG(object):
       #########   YOUR CODE HERE - 5-10 lines.   ############
       returns = []
       accumulated = 0.
-      for r in rewards[::-1]:
+      for r in reversed(rewards):
         accumulated = r + accumulated * self.config.gamma
         returns.append(accumulated)
+      returns = np.array(returns[::-1])
       #######################################################
       #########          END YOUR CODE.          ############
-      all_returns.append(np.array(returns[::-1]))
-    returns = np.concatenate(all_returns)
+      all_returns.append(returns)
 
+    returns = np.concatenate(all_returns)
     return returns
 
   def calculate_advantage(self, returns, observations):
